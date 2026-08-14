@@ -1,0 +1,32 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Lead {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String
+  release   String   @db.Text
+  status    String   @default("NEW")
+  createdAt DateTime @default(now())
+
+  audits LeadAudit[] // 👈 RELAÇÃO INVERSA (OBRIGATÓRIA)
+}
+
+model LeadAudit {
+  id        String   @id @default(cuid())
+  leadId    String
+  oldStatus String
+  newStatus String
+  changedAt DateTime @default(now())
+
+  Lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+}
