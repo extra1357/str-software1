@@ -1,6 +1,7 @@
-// app/layout.tsx
 import type { Metadata } from "next";
-import { Inter } from "next/font/google"; // Fonte moderna e profissional
+import { Inter } from "next/font/google";
+import Script from "next/script";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -25,9 +26,26 @@ export default function RootLayout({
   return (
     <html lang="pt-PT" className="scroll-smooth">
       <body className={`${inter.className} bg-premium-gradient antialiased`}>
-        {/* Aqui podes incluir uma Navbar futuramente */}
+        {process.env.NEXT_PUBLIC_GA_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="ga4-init" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}', {
+                  page_path: window.location.pathname,
+                });
+              `}
+            </Script>
+          </>
+        )}
         {children}
-        {/* Aqui podes incluir um Footer futuramente */}
+        <GoogleAnalytics />
       </body>
     </html>
   );
