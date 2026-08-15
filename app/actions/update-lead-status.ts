@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 import { prisma } from "../../lib/prisma";
 import { revalidatePath } from "next/cache";
 
@@ -13,7 +13,7 @@ export async function updateLeadStatus(formData: FormData) {
     return;
   }
 
-  // Validacao defensiva (evita status invalido)
+  // Validação defensiva (evita status inválido)
   const allowedStatus = ["NEW", "CONTACTED", "CLOSED", "ARCHIVED"];
   if (!allowedStatus.includes(status)) {
     return;

@@ -1,16 +1,32 @@
+===== ARQUIVO: app\page.tsx =====
 'use client';
 
 import { LeadForm } from "../components/LeadForm";
 import Link from "next/link";
 import Script from "next/script";
 import { useState, useEffect } from "react";
-import { SERVICOS } from "@/lib/servicos-data";
-import { REGIOES } from "@/lib/regioes-data";
 
 // ── DADOS ─────────────────────────────────────────────────────────────────────
-// SERVICOS e REGIOES agora vêm de lib/servicos-data.ts e lib/regioes-data.ts
-// (fonte única — as páginas /servicos/[slug] e /regioes/[slug] usam os mesmos
-// arquivos, então não há mais risco de duplicação ficar dessincronizada).
+
+const SERVICOS = [
+  { icone: "◈", titulo: "Sistemas Web Sob Medida",      descricao: "Plataformas completas desenhadas para o seu processo. ERP, CRM, portais internos e painéis de gestão.",                                         url: "/servicos/sistemas-web", tags: ["Next.js", "TypeScript", "PostgreSQL"] },
+  { icone: "⬡", titulo: "Marketplaces & E-commerce",    descricao: "Do MVP ao marketplace com pagamentos, multivendedor, logística e analytics integrados.",                                                          url: "/servicos/marketplace",  tags: ["Stripe", "Prisma", "Next.js"]        },
+  { icone: "◎", titulo: "Agentes de Inteligência Artificial", descricao: "Automação inteligente com LLMs: agentes que lêem documentos, respondem clientes e tomam decisões.",                                        url: "/servicos/agentes-ia",   tags: ["OpenAI", "LangChain", "Python"]      },
+  { icone: "▣", titulo: "SaaS & Plataformas Recorrentes", descricao: "Construímos o produto que você vende como serviço — multi-tenant, planos, cobranças e escalabilidade desde o dia 1.",                          url: "/servicos/saas",         tags: ["SaaS", "Multi-tenant", "Stripe"]     },
+  { icone: "◐", titulo: "Consultoria & Arquitetura",    descricao: "Revisão de código legado, migração de stack, definição de arquitetura e mentoria técnica para times.",                                            url: "/servicos/consultoria",  tags: ["Arquitetura", "Review", "Mentoria"]  },
+  { icone: "⬟", titulo: "Apps Mobile",                  descricao: "Aplicativos iOS e Android com React Native — uma base de código, dois mercados, sem compromisso na experiência.",                                 url: "/servicos/mobile",       tags: ["React Native", "Expo", "TypeScript"] },
+];
+
+const REGIOES = [
+  { cidade: "São Paulo Capital", slug: "sao-paulo"     },
+  { cidade: "Grande SP",         slug: "grande-sp"     },
+  { cidade: "Sorocaba",          slug: "sorocaba"      },
+  { cidade: "Campinas",          slug: "campinas"      },
+  { cidade: "Ribeirão Preto",    slug: "ribeirao-preto"},
+  { cidade: "Santos",            slug: "santos"        },
+  { cidade: "Interior SP",       slug: "interior-sp"   },
+  { cidade: "Todo o Brasil",     slug: "brasil"        },
+];
 
 const BLOG_POSTS = [
   { categoria: "Estratégia",  titulo: "Quando contratar uma software house em vez de montar um time interno",       resumo: "O dilema entre terceirizar e contratar internamente tem resposta diferente dependendo do estágio da empresa.",         slug: "software-house-vs-time-interno", leitura: "6 min" },
@@ -77,9 +93,9 @@ function Navbar() {
 
 // ── CARDS ─────────────────────────────────────────────────────────────────────
 
-function ServicoCard({ icone, titulo, descricao, slug, tags }: typeof SERVICOS[0]) {
+function ServicoCard({ icone, titulo, descricao, url, tags }: typeof SERVICOS[0]) {
   return (
-    <Link href={`/servicos/${slug}`} className="group relative border border-white/8 p-7 bg-[#0d0d0d] hover:border-[#C8922A]/40 hover:bg-[#111] transition-all duration-300 block">
+    <Link href={url} className="group relative border border-white/8 p-7 bg-[#0d0d0d] hover:border-[#C8922A]/40 hover:bg-[#111] transition-all duration-300 block">
       <div className="absolute top-0 left-0 h-0.5 w-0 bg-[#C8922A] group-hover:w-full transition-all duration-500" />
       <div className="text-[#C8922A] text-3xl mb-5 opacity-60 group-hover:opacity-100 transition-opacity">{icone}</div>
       <h3 className="text-white font-bold text-lg mb-3 leading-tight">{titulo}</h3>
@@ -291,8 +307,8 @@ export default function Home() {
               <div>
                 <p className="text-white/18 text-xs font-mono tracking-[0.25em] uppercase mb-4">Serviços</p>
                 <ul className="space-y-2.5">
-                  {SERVICOS.map(({ titulo, slug }) => (
-                    <li key={titulo}><Link href={`/servicos/${slug}`} className="text-white/32 text-sm hover:text-white transition-colors">{titulo}</Link></li>
+                  {[["Sistemas Web","/servicos/sistemas-web"],["Marketplace","/servicos/marketplace"],["Agentes de IA","/servicos/agentes-ia"],["SaaS","/servicos/saas"],["Consultoria","/servicos/consultoria"],["Mobile","/servicos/mobile"]].map(([l,h]) => (
+                    <li key={l}><Link href={h} className="text-white/32 text-sm hover:text-white transition-colors">{l}</Link></li>
                   ))}
                 </ul>
               </div>
@@ -320,3 +336,333 @@ export default function Home() {
     </>
   );
 }
+
+
+===== FIM: app\page.tsx =====
+
+
+===== ARQUIVO: app\layout.tsx =====
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import Script from "next/script";
+import { Suspense } from "react";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
+import "./globals.css";
+
+const inter = Inter({ subsets: ["latin"] });
+
+export const metadata: Metadata = {
+  title: "STR SOFTWARE | Desenvolvimento de Sistemas Web de Alta Performance",
+  description: "Especialistas em Next.js, TypeScript e Node.js. Criamos soluções robustas e escaláveis para o seu negócio.",
+  keywords: ["Desenvolvimento de sites", "Sistemas Web", "Next.js", "Software House", "STR Software"],
+  authors: [{ name: "STR Software" }],
+  openGraph: {
+    title: "STR SOFTWARE | Sistemas Web Premium",
+    description: "Transformamos ideias em software de alta tecnologia.",
+    type: "website",
+  },
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="pt-PT" className="scroll-smooth">
+      <body className={`${inter.className} bg-premium-gradient antialiased`}>
+        {process.env.NEXT_PUBLIC_GA_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="ga4-init" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}', {
+                  page_path: window.location.pathname,
+                });
+              `}
+            </Script>
+          </>
+        )}
+        {children}
+        <Suspense fallback={null}>
+          <GoogleAnalytics />
+        </Suspense>
+      </body>
+    </html>
+  );
+}
+
+===== FIM: app\layout.tsx =====
+
+
+===== ARQUIVO: app\globals.css =====
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 2, 6, 23;
+  --background-end-rgb: 0, 0, 0;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      rgb(var(--background-start-rgb)),
+      rgb(var(--background-end-rgb))
+    );
+  min-height: 100vh;
+}
+
+/* Painel com efeito de vidro para o formulário */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+}
+
+/* Brilho no texto */
+.text-glow {
+  text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+}
+
+===== FIM: app\globals.css =====
+
+
+===== ARQUIVO: tailwind.config.ts =====
+// tailwind.config.ts
+import type { Config } from "tailwindcss";
+
+export default {
+  content: [
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
+  ],
+  theme: {
+    extend: {
+      animation: {
+        marquee: 'marquee 25s linear infinite',
+      },
+      keyframes: {
+        marquee: {
+          '0%': { transform: 'translateX(0%)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
+      },
+    },
+  },
+  plugins: [],
+} satisfies Config;
+
+===== FIM: tailwind.config.ts =====
+
+
+===== ARQUIVO: package.json =====
+{
+  "name": "str-software",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "postinstall": "prisma generate"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.1",
+    "next": "^16.1.1",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "resend": "^4.0.1",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.6",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "autoprefixer": "^10.4.23",
+    "postcss": "^8.5.6",
+    "prisma": "^6.19.1",
+    "tailwindcss": "^3.4.19",
+    "typescript": "^5.6.3"
+  }
+}
+
+
+===== FIM: package.json =====
+
+
+===== ARQUIVO: components\Services.tsx =====
+export function Services() {
+  const services = [
+    {
+      title: "Sistemas Web Sob Medida",
+      description:
+        "Desenvolvemos sistemas web robustos, escaláveis e seguros, totalmente alinhados às necessidades do seu negócio.",
+    },
+    {
+      title: "Aplicações com Next.js",
+      description:
+        "Projetos modernos utilizando Next.js, com foco em performance, SEO, segurança e experiência do usuário.",
+    },
+    {
+      title: "Back-end & APIs",
+      description:
+        "APIs seguras e performáticas em Node.js, integração com bancos de dados e serviços externos.",
+    },
+    {
+      title: "Automação de Processos",
+      description:
+        "Automatizamos fluxos internos para reduzir custos operacionais e aumentar a produtividade da sua empresa.",
+    },
+  ];
+
+  return (
+    <section className="w-full py-24 bg-slate-950">
+      <div className="max-w-6xl mx-auto px-4">
+        <header className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight">
+            Nossos <span className="text-blue-500">Serviços</span>
+          </h2>
+          <p className="text-slate-400 mt-4 max-w-2xl mx-auto">
+            Soluções digitais de alto nível para empresas que exigem tecnologia
+            sólida e resultados reais.
+          </p>
+        </header>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {services.map((service) => (
+            <div
+              key={service.title}
+              className="glass-panel p-6 rounded-2xl border border-white/10 hover:border-blue-500/40 transition-all"
+            >
+              <h3 className="text-xl font-bold text-white mb-3">
+                {service.title}
+              </h3>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                {service.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+
+===== FIM: components\Services.tsx =====
+
+
+===== ARQUIVO: lib\servicos-data.ts =====
+export type Servico = {
+  slug: string;
+  icone: string;
+  titulo: string;
+  descricao: string;
+  tags: string[];
+  detalhes: string;
+  beneficios: string[];
+};
+
+export const SERVICOS: Servico[] = [
+  {
+    slug: "sistemas-web",
+    icone: "\u25c8",
+    titulo: "Sistemas Web Sob Medida",
+    descricao: "Plataformas completas desenhadas para o seu processo. ERP, CRM, portais internos e paineis de gestao.",
+    tags: ["Next.js", "TypeScript", "PostgreSQL"],
+    detalhes: "Construimos sistemas web personalizados que se encaixam exatamente no processo da sua empresa, em vez de forcar sua operacao a se adaptar a um software generico. Do levantamento de requisitos ao deploy em producao, cuidamos de toda a arquitetura, banco de dados e interface.",
+    beneficios: [
+      "Arquitetura pensada para escalar com o seu negocio",
+      "Interface intuitiva, sem curva de aprendizado desnecessaria",
+      "Integracao com sistemas que voce ja usa",
+      "Codigo documentado e de sua propriedade",
+    ],
+  },
+  {
+    slug: "marketplace",
+    icone: "\u2b21",
+    titulo: "Marketplaces & E-commerce",
+    descricao: "Do MVP ao marketplace com pagamentos, multivendedor, logistica e analytics integrados.",
+    tags: ["Stripe", "Prisma", "Next.js"],
+    detalhes: "Desenvolvemos marketplaces e lojas virtuais completas, com suporte a multiplos vendedores, split de pagamento, gestao de estoque e logistica integrada. Ideal para empresas que querem lancar rapido e escalar com seguranca.",
+    beneficios: [
+      "Checkout otimizado para conversao",
+      "Split de pagamento automatico entre vendedores",
+      "Painel administrativo completo",
+      "Integracao com meios de pagamento nacionais",
+    ],
+  },
+  {
+    slug: "agentes-ia",
+    icone: "\u25ce",
+    titulo: "Agentes de Inteligencia Artificial",
+    descricao: "Automacao inteligente com LLMs: agentes que leem documentos, respondem clientes e tomam decisoes.",
+    tags: ["OpenAI", "LangChain", "Python"],
+    detalhes: "Criamos agentes de IA sob medida que automatizam tarefas repetitivas: leitura e classificacao de documentos, atendimento ao cliente, triagem de leads e tomada de decisao com base em regras de negocio reais.",
+    beneficios: [
+      "Reducao de custo operacional em tarefas repetitivas",
+      "Atendimento 24/7 sem perder qualidade",
+      "Integracao com seus sistemas e bases de dados atuais",
+      "Modelos ajustados ao vocabulario do seu setor",
+    ],
+  },
+  {
+    slug: "saas",
+    icone: "\u25a3",
+    titulo: "SaaS & Plataformas Recorrentes",
+    descricao: "Construimos o produto que voce vende como servico \u2014 multi-tenant, planos, cobrancas e escalabilidade desde o dia 1.",
+    tags: ["SaaS", "Multi-tenant", "Stripe"],
+    detalhes: "Do zero ao primeiro cliente pagante: construimos plataformas SaaS com arquitetura multi-tenant, gestao de planos e assinaturas, cobranca recorrente e painel de metricas para voce acompanhar o crescimento do seu produto.",
+    beneficios: [
+      "Arquitetura multi-tenant segura desde o inicio",
+      "Cobranca recorrente e gestao de planos integrada",
+      "Painel de metricas de crescimento (MRR, churn, etc.)",
+      "Pronto para escalar sem reescrever o produto",
+    ],
+  },
+  {
+    slug: "consultoria",
+    icone: "\u25d0",
+    titulo: "Consultoria & Arquitetura",
+    descricao: "Revisao de codigo legado, migracao de stack, definicao de arquitetura e mentoria tecnica para times.",
+    tags: ["Arquitetura", "Review", "Mentoria"],
+    detalhes: "Ajudamos empresas e times tecnicos a resolver problemas de arquitetura, revisar codigo legado, planejar migracoes de stack e estruturar boas praticas de desenvolvimento, com mentoria direta para o seu time.",
+    beneficios: [
+      "Diagnostico tecnico completo do seu sistema atual",
+      "Plano de migracao sem parar a operacao",
+      "Mentoria tecnica para o seu time interno",
+      "Recomendacoes praticas, sem jargao desnecessario",
+    ],
+  },
+  {
+    slug: "mobile",
+    icone: "\u2b1f",
+    titulo: "Apps Mobile",
+    descricao: "Aplicativos iOS e Android com React Native \u2014 uma base de codigo, dois mercados, sem compromisso na experiencia.",
+    tags: ["React Native", "Expo", "TypeScript"],
+    detalhes: "Desenvolvemos aplicativos moveis para iOS e Android a partir de uma unica base de codigo, reduzindo custo e tempo de desenvolvimento sem abrir mao da qualidade e performance nativa.",
+    beneficios: [
+      "Uma base de codigo para as duas plataformas",
+      "Publicacao nas lojas (App Store e Google Play)",
+      "Performance proxima do nativo",
+      "Manutencao mais simples e barata a longo prazo",
+    ],
+  },
+];
+
+
+===== FIM: lib\servicos-data.ts =====
+
+
