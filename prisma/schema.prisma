@@ -1,22 +1,21 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
 model Lead {
-  id        String   @id @default(cuid())
+  id        String      @id @default(cuid())
   name      String
   email     String
   phone     String
-  release   String   @db.Text
-  status    String   @default("NEW")
-  createdAt DateTime @default(now())
-
-  audits LeadAudit[] // 👈 RELAÇÃO INVERSA (OBRIGATÓRIA)
+  release   String
+  status    String      @default("NEW")
+  createdAt DateTime    @default(now())
+  audits    LeadAudit[]
 }
 
 model LeadAudit {
@@ -25,8 +24,59 @@ model LeadAudit {
   oldStatus String
   newStatus String
   changedAt DateTime @default(now())
-
-  Lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  Lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
 
   @@index([leadId])
+}
+
+model Cliente {
+  id        String   @id @default(cuid())
+  nome      String
+  email     String   @unique
+  senhaHash String
+  telefone  String?
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  faturas   Fatura[]
+  tickets   Ticket[]
+}
+
+model Fatura {
+  id              String    @id @default(cuid())
+  clienteId       String
+  cliente         Cliente   @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  descricao       String
+  valor           Decimal   @db.Decimal(10, 2)
+  status          String    @default("PENDENTE")
+  vencimento      DateTime
+  pagoEm          DateTime?
+  stripePaymentId String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([clienteId])
+}
+
+model Ticket {
+  id        String   @id @default(cuid())
+  clienteId String
+  cliente   Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  titulo    String
+  descricao String
+  status    String   @default("ABERTO")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clienteId])
+}
+
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  email     String
+  sucesso   Boolean
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([email, createdAt])
 }
