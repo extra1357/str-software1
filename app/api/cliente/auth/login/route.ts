@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
 
   await registrarTentativaLogin(email, true, ip);
 
-  const token = gerarSessionToken(cliente.id);
+  const token = gerarSessionToken(cliente.id, cliente.sessionVersion);
   const response = NextResponse.json({ ok: true });
   response.cookies.set(CLIENTE_SESSION_COOKIE, token, {
     httpOnly: true,

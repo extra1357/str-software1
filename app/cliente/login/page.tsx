@@ -85,6 +85,13 @@ export default function ClienteLoginPage() {
           />
         </div>
 
+        <a
+          href="/cliente/recuperar-senha"
+          className="block text-right text-sm text-blue-400 hover:text-blue-300 transition"
+        >
+          Esqueci minha senha
+        </a>
+
         <button
           type="submit"
           disabled={carregando}

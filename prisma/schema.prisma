@@ -30,16 +30,18 @@ model LeadAudit {
 }
 
 model Cliente {
-  id        String   @id @default(cuid())
-  nome      String
-  email     String   @unique
-  senhaHash String
-  telefone  String?
-  ativo     Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  faturas   Fatura[]
-  tickets   Ticket[]
+  id                  String               @id @default(cuid())
+  nome                String
+  email               String               @unique
+  senhaHash           String
+  sessionVersion      Int                  @default(0)
+  telefone            String?
+  ativo               Boolean              @default(true)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  faturas             Fatura[]
+  tickets             Ticket[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model Fatura {
@@ -79,4 +81,17 @@ model LoginAttempt {
   createdAt DateTime @default(now())
 
   @@index([email, createdAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  clienteId String
+  cliente   Cliente   @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([clienteId])
+  @@index([expiresAt])
 }

@@ -28,7 +28,7 @@ export default async function ClienteDashboardPage() {
     redirect("/cliente/login");
   }
 
-  const sessao = verificarSessionToken(token);
+  const sessao = await verificarSessionToken(token);
 
   if (!sessao) {
     console.warn("[cliente/dashboard] token de sessao invalido ou expirado");

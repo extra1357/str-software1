@@ -57,7 +57,7 @@ export function SiteFooter() {
         <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-white/18 text-xs font-mono">© {new Date().getFullYear()} STR Software. Todos os direitos reservados.</p>
           <div className="flex items-center gap-6">
-            {[["Privacidade", "/privacidade"], ["Termos", "/termos"], ["Blog", "/blog"]].map(([l, h]) => (
+            {[["Privacidade", "/privacidade"], ["Termos", "/termos"], ["Blog", "/blog"], ["Área do Cliente", "/cliente/login"]].map(([l, h]) => (
               <Link key={l} href={h} className="text-white/18 text-xs hover:text-white/45 transition-colors">
                 {l}
               </Link>

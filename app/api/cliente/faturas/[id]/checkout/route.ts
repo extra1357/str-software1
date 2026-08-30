@@ -11,7 +11,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ erro: "Nao autorizado." }, { status: 401 });
   }
 
-  const sessao = verificarSessionToken(token);
+  const sessao = await verificarSessionToken(token);
 
   if (!sessao) {
     console.warn("[cliente/faturas/checkout] token de sessao invalido");
