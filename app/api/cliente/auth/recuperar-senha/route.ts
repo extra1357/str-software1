@@ -185,10 +185,26 @@ export async function POST(request: Request) {
 
     const link = `${appUrl}/cliente/redefinir-senha?token=${encodeURIComponent(token)}`;
 
+    const resendFromEmail = process.env.RESEND_FROM_EMAIL;
+
+    if (!resendFromEmail) {
+      console.error("[recuperar-senha] RESEND_FROM_EMAIL nao configurado");
+
+      await prisma.passwordResetToken.update({
+        where: { id: resetCriado.id },
+        data: { usedAt: new Date() },
+      });
+
+      return NextResponse.json(
+        { erro: "Serviço temporariamente indisponível." },
+        { status: 503 },
+      );
+    }
+
     const resend = new Resend(process.env.RESEND_API_KEY);
 
     const resultadoEnvio = await resend.emails.send({
-      from: "STR Software <onboarding@resend.dev>",
+      from: resendFromEmail,
       to: cliente.email,
       subject: "Redefinição de senha - STR Software",
       html: gerarHtmlRecuperacao(cliente.nome, link),
