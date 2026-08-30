@@ -1,9 +1,9 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 
-export default function RedefinirSenhaPage() {
+function RedefinirSenhaConteudo() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token") ?? "";
 
@@ -194,5 +194,12 @@ export default function RedefinirSenhaPage() {
         </a>
       </form>
     </main>
+  );
+}
+export default function RedefinirSenhaPage() {
+  return (
+    <Suspense fallback={null}>
+      <RedefinirSenhaConteudo />
+    </Suspense>
   );
 }
