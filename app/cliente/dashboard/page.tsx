@@ -4,6 +4,7 @@ import { verificarSessionToken, CLIENTE_SESSION_COOKIE } from "@/lib/auth-client
 import { prisma } from "@/lib/prisma";
 import LogoutButton from "./logout-button";
 import PagarButton from "./pagar-button";
+import SolicitacoesPanel from "./solicitacoes-panel";
 
 function formatarMoeda(valor: number): string {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(valor);
@@ -104,6 +105,8 @@ export default async function ClienteDashboardPage() {
             </table>
           </div>
         )}
+
+        <SolicitacoesPanel />
       </div>
     </main>
   );

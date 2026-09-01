@@ -61,16 +61,26 @@ model Fatura {
 }
 
 model Ticket {
-  id        String   @id @default(cuid())
-  clienteId String
-  cliente   Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
-  titulo    String
-  descricao String
-  status    String   @default("ABERTO")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String    @id @default(cuid())
+  clienteId    String
+  cliente      Cliente   @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+
+  protocolo    String    @unique
+  tipo          String    @default("SUPORTE")
+  titulo        String
+  descricao    String
+  prioridade   String    @default("NORMAL")
+  status        String    @default("ABERTO")
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  encerradoEm   DateTime?
+
+  mensagens     TicketMensagem[]
 
   @@index([clienteId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model LoginAttempt {
@@ -94,4 +104,17 @@ model PasswordResetToken {
 
   @@index([clienteId])
   @@index([expiresAt])
+}
+model TicketMensagem {
+  id        String   @id @default(cuid())
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  autorTipo String
+  mensagem  String
+
+  createdAt DateTime @default(now())
+
+  @@index([ticketId])
+  @@index([createdAt])
 }
