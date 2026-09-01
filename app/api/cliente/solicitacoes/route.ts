@@ -23,6 +23,9 @@ const PRIORIDADES_VALIDAS = new Set([
   "ALTA",
 ]);
 
+const RATE_LIMIT_SOLICITACOES_MINUTOS = 15;
+const RATE_LIMIT_SOLICITACOES_MAX = 10;
+
 function gerarProtocolo(): string {
   const ano = new Date().getUTCFullYear();
   const sufixo = randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase();
@@ -84,6 +87,43 @@ export async function POST(request: NextRequest) {
 
   if (!clienteId) {
     return NextResponse.json({ erro: "Nao autorizado." }, { status: 401 });
+  }
+
+  const desdeRateLimit = new Date(
+    Date.now() - RATE_LIMIT_SOLICITACOES_MINUTOS * 60 * 1000
+  );
+
+  try {
+    const solicitacoesRecentes = await prisma.ticket.count({
+      where: {
+        clienteId,
+        createdAt: { gte: desdeRateLimit },
+      },
+    });
+
+    if (solicitacoesRecentes >= RATE_LIMIT_SOLICITACOES_MAX) {
+      console.warn(
+        `[cliente/solicitacoes] rate limit atingido pelo cliente ${clienteId}`
+      );
+
+      return NextResponse.json(
+        {
+          erro:
+            "Limite temporario de novas solicitacoes atingido. Tente novamente mais tarde.",
+        },
+        { status: 429 }
+      );
+    }
+  } catch (erro) {
+    console.error(
+      "[cliente/solicitacoes] falha ao verificar rate limit:",
+      erro
+    );
+
+    return NextResponse.json(
+      { erro: "Falha ao validar limite de solicitacoes." },
+      { status: 500 }
+    );
   }
 
   let tipo: string;
