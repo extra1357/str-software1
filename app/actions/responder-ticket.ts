@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { isAdminCookieAutenticado } from "@/lib/auth-admin";
+import { ADMIN_COOKIE_NAME, isAdminCookieAutenticado } from "@/lib/auth-admin";
 
 export async function responderTicket(
   ticketId: string,
@@ -13,7 +13,7 @@ export async function responderTicket(
     const cookieStore = await cookies();
 
     const autenticado = isAdminCookieAutenticado(
-      cookieStore.get("admin-auth")?.value
+      cookieStore.get(ADMIN_COOKIE_NAME)?.value
     );
 
     if (!autenticado) {
