@@ -16,6 +16,10 @@ const FICHAS = [
     href: "/admin/clientes",
     rotulo: "Clientes",
   },
+  {
+    href: "/admin/financeiro",
+    rotulo: "Financeiro",
+  },
 ];
 
 export default function AdminNav() {
