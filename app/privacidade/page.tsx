@@ -7,11 +7,8 @@ export const metadata: Metadata = {
   description: "Como a STR Software coleta, usa e protege os dados pessoais de visitantes e clientes.",
 };
 
-// ATENÇÃO: este é um rascunho estrutural, alinhado à LGPD (Lei 13.709/2018)
-// na forma, mas os trechos marcados com [A DEFINIR] precisam ser
-// preenchidos com os dados reais da empresa (razão social, CNPJ, e-mail do
-// encarregado de dados/DPO) antes de publicar. Recomenda-se revisão
-// jurídica antes de colocar esta página no ar.
+// Política de Privacidade da STR Software.
+// Recomenda-se revisão jurídica periódica e acompanhamento da LGPD.
 type Secao = {
   titulo: string;
   paragrafos: string[];
@@ -23,7 +20,7 @@ const SECOES: Secao[] = [
   {
     titulo: "1. Quem Somos",
     paragrafos: [
-      "Esta Política de Privacidade explica como a STR Software ([RAZÃO SOCIAL A DEFINIR], CNPJ [A DEFINIR]) coleta, usa e protege os dados pessoais de visitantes do site strsoftware.com.br e de clientes, em conformidade com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018 — LGPD).",
+      "Esta Política de Privacidade explica como a STR Software coleta, usa e protege os dados pessoais de visitantes do site strsoftware.com.br e de clientes, em conformidade com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018 — LGPD).",
     ],
   },
   {
@@ -93,7 +90,7 @@ const SECOES: Secao[] = [
   {
     titulo: "10. Contato / Encarregado de Dados (DPO)",
     paragrafos: [
-      "Para exercer seus direitos previstos na LGPD ou esclarecer dúvidas sobre esta política, entre em contato pelo e-mail [E-MAIL DO ENCARREGADO DE DADOS A DEFINIR].",
+      "Para exercer seus direitos previstos na LGPD ou esclarecer dúvidas sobre esta política, entre em contato pelo e-mail contato@str.com.br.",
     ],
   },
 ];

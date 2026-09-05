@@ -36,7 +36,20 @@ model Cliente {
   senhaHash           String
   sessionVersion      Int                  @default(0)
   telefone            String?
-  ativo               Boolean              @default(true)
+  tipoPessoa           String?
+  documento            String?
+  razaoSocial          String?
+  nomeFantasia         String?
+  nomeContato          String?
+  cep                  String?
+  logradouro           String?
+  numero               String?
+  complemento          String?
+  bairro               String?
+  cidade               String?
+  uf                   String?
+  observacoes          String?
+  ativo                Boolean              @default(true)
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
   faturas             Fatura[]

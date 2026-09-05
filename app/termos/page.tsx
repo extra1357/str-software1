@@ -7,9 +7,8 @@ export const metadata: Metadata = {
   description: "Termos de uso do site e dos serviços da STR Software.",
 };
 
-// ATENÇÃO: este é um rascunho estrutural. Os trechos marcados com
-// [A DEFINIR] precisam ser preenchidos com os dados reais da empresa antes
-// de publicar, e o conteúdo como um todo deve passar por revisão jurídica.
+// Documento institucional da STR Software.
+// Recomenda-se revisão jurídica periódica do conteúdo.
 const SECOES = [
   {
     titulo: "1. Aceitação dos Termos",
@@ -20,7 +19,7 @@ const SECOES = [
   {
     titulo: "2. Sobre a STR Software",
     paragrafos: [
-      "[RAZÃO SOCIAL A DEFINIR], inscrita no CNPJ [A DEFINIR], atuando sob a marca STR Software, é uma empresa de desenvolvimento de software sediada em São Paulo, Brasil.",
+      "A STR Software é uma empresa de desenvolvimento de software sediada em Salto – SP, Brasil.",
     ],
   },
   {
@@ -74,13 +73,13 @@ const SECOES = [
   {
     titulo: "11. Legislação Aplicável",
     paragrafos: [
-      "Estes termos são regidos pelas leis da República Federativa do Brasil. Fica eleito o foro da comarca de [CIDADE A DEFINIR] para dirimir eventuais controvérsias, com renúncia a qualquer outro, por mais privilegiado que seja.",
+      "Estes termos são regidos pelas leis da República Federativa do Brasil. Fica eleito o foro da comarca de Salto/SP para dirimir eventuais controvérsias, com renúncia a qualquer outro, por mais privilegiado que seja.",
     ],
   },
   {
     titulo: "12. Contato",
     paragrafos: [
-      "Dúvidas sobre estes termos podem ser enviadas para [E-MAIL DE CONTATO A DEFINIR].",
+      "Dúvidas sobre estes termos podem ser enviadas para contato@str.com.br.",
     ],
   },
 ];
