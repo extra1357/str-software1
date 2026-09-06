@@ -20,6 +20,10 @@ const FICHAS = [
     href: "/admin/financeiro",
     rotulo: "Financeiro",
   },
+  {
+    href: "/admin/blog",
+    rotulo: "Blog / CMS",
+  },
 ];
 
 export default function AdminNav() {
