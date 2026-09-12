@@ -18,38 +18,41 @@ export default async function LeadsAdminPage(props: {
   const searchParams = await props.searchParams;
   const statusFilter = searchParams?.status;
 
-  const [
-    totalLeads,
-    newLeads,
-    contactedLeads,
-    closedLeads,
-    archivedLeads,
-    leads,
-  ] = await Promise.all([
-    prisma.lead.count({
-      where: { status: { not: "ARCHIVED" } },
-    }),
-    prisma.lead.count({
-      where: { status: "NEW" },
-    }),
-    prisma.lead.count({
-      where: { status: "CONTACTED" },
-    }),
-    prisma.lead.count({
-      where: { status: "CLOSED" },
-    }),
-    prisma.lead.count({
-      where: { status: "ARCHIVED" },
-    }),
-    prisma.lead.findMany({
-      where: statusFilter
-        ? { status: statusFilter }
-        : { status: { not: "ARCHIVED" } },
-      orderBy: {
-        createdAt: "desc",
-      },
-    }),
-  ]);
+  const contagensPorStatus = await prisma.lead.groupBy({
+    by: ["status"],
+    _count: {
+      _all: true,
+    },
+  });
+
+  const contagens = Object.fromEntries(
+    contagensPorStatus.map((item) => [
+      item.status,
+      item._count._all,
+    ]),
+  ) as Record<string, number>;
+
+  const totalLeads = contagensPorStatus.reduce(
+    (total, item) =>
+      item.status === "ARCHIVED"
+        ? total
+        : total + item._count._all,
+    0,
+  );
+
+  const newLeads = contagens.NEW ?? 0;
+  const contactedLeads = contagens.CONTACTED ?? 0;
+  const closedLeads = contagens.CLOSED ?? 0;
+  const archivedLeads = contagens.ARCHIVED ?? 0;
+
+  const leads = await prisma.lead.findMany({
+    where: statusFilter
+      ? { status: statusFilter }
+      : { status: { not: "ARCHIVED" } },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
 
   return (
     <main className="px-6 py-8">

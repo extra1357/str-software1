@@ -3,6 +3,9 @@ import {
   ADMIN_COOKIE_NAME,
   verificarAdminSessionToken,
 } from "@/lib/auth-admin";
+import {
+  verificarUsuarioSessionToken,
+} from "@/lib/auth-usuario-token";
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -31,10 +34,13 @@ export function proxy(request: NextRequest) {
   const adminToken =
     request.cookies.get(ADMIN_COOKIE_NAME)?.value;
 
-  const autenticado =
+  const autenticadoLegado =
     verificarAdminSessionToken(adminToken);
 
-  if (autenticado) {
+  const autenticadoComoUsuario =
+    verificarUsuarioSessionToken(adminToken) !== null;
+
+  if (autenticadoLegado || autenticadoComoUsuario) {
     return NextResponse.next();
   }
 

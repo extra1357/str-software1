@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+type AdminNavProps = {
+  papel?: string;
+};
+
 const FICHAS = [
   {
     href: "/admin/solicitacoes",
@@ -26,34 +30,60 @@ const FICHAS = [
   },
 ];
 
-export default function AdminNav() {
+export default function AdminNav({
+  papel,
+}: AdminNavProps) {
   const pathname = usePathname();
 
-  return (
-    <nav
-      aria-label="Módulos administrativos"
-      className="flex flex-wrap gap-2"
-    >
-      {FICHAS.map((ficha) => {
-        const ativa =
-          pathname === ficha.href ||
-          pathname.startsWith(ficha.href + "/");
+  const fichas =
+    papel === "SUPER_ADMIN"
+      ? [
+          ...FICHAS,
+          {
+            href: "/admin/destinatarios-leads",
+            rotulo: "E-mails dos leads",
+          },
+          {
+            href: "/admin/usuarios",
+            rotulo: "Usuários",
+          },
+        ]
+      : FICHAS;
 
-        return (
-          <Link
-            key={ficha.href}
-            href={ficha.href}
-            className={
-              "px-5 py-3 rounded-t-xl border text-sm font-bold transition " +
-              (ativa
-                ? "bg-slate-900 border-blue-500/50 border-b-slate-900 text-blue-400"
-                : "bg-slate-950/40 border-white/10 text-slate-400 hover:text-white hover:bg-slate-900/60")
-            }
-          >
-            {ficha.rotulo}
-          </Link>
-        );
-      })}
-    </nav>
+  return (
+    <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+      <nav
+        aria-label="Módulos administrativos"
+        className="flex flex-wrap gap-2"
+      >
+        {fichas.map((ficha) => {
+          const ativa =
+            pathname === ficha.href ||
+            pathname.startsWith(ficha.href + "/");
+
+          return (
+            <Link
+              key={ficha.href}
+              href={ficha.href}
+              className={
+                "px-5 py-3 rounded-t-xl border text-sm font-bold transition " +
+                (ativa
+                  ? "bg-slate-900 border-blue-500/50 border-b-slate-900 text-blue-400"
+                  : "bg-slate-950/40 border-white/10 text-slate-400 hover:text-white hover:bg-slate-900/60")
+              }
+            >
+              {ficha.rotulo}
+            </Link>
+          );
+        })}
+      </nav>
+
+      <Link
+        href="/"
+        className="inline-flex w-fit items-center gap-2 rounded-lg border border-white/10 bg-slate-900/60 px-4 py-2 text-sm font-bold text-slate-300 transition hover:border-blue-500/40 hover:bg-slate-800 hover:text-white"
+      >
+        ← Voltar ao site
+      </Link>
+    </div>
   );
 }

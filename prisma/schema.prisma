@@ -36,20 +36,20 @@ model Cliente {
   senhaHash           String
   sessionVersion      Int                  @default(0)
   telefone            String?
-  tipoPessoa           String?
-  documento            String?
-  razaoSocial          String?
-  nomeFantasia         String?
-  nomeContato          String?
-  cep                  String?
-  logradouro           String?
-  numero               String?
-  complemento          String?
-  bairro               String?
-  cidade               String?
-  uf                   String?
-  observacoes          String?
-  ativo                Boolean              @default(true)
+  tipoPessoa          String?
+  documento           String?
+  razaoSocial         String?
+  nomeFantasia        String?
+  nomeContato         String?
+  cep                 String?
+  logradouro          String?
+  numero              String?
+  complemento         String?
+  bairro              String?
+  cidade              String?
+  uf                  String?
+  observacoes         String?
+  ativo               Boolean              @default(true)
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
   faturas             Fatura[]
@@ -74,22 +74,22 @@ model Fatura {
 }
 
 model Ticket {
-  id           String    @id @default(cuid())
-  clienteId    String
-  cliente      Cliente   @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  id        String  @id @default(cuid())
+  clienteId String
+  cliente   Cliente @relation(fields: [clienteId], references: [id], onDelete: Cascade)
 
-  protocolo    String    @unique
-  tipo          String    @default("SUPORTE")
-  titulo        String
-  descricao    String
-  prioridade   String    @default("NORMAL")
-  status        String    @default("ABERTO")
+  protocolo  String @unique
+  tipo       String @default("SUPORTE")
+  titulo     String
+  descricao  String
+  prioridade String @default("NORMAL")
+  status     String @default("ABERTO")
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  encerradoEm   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  encerradoEm DateTime?
 
-  mensagens     TicketMensagem[]
+  mensagens TicketMensagem[]
 
   @@index([clienteId])
   @@index([status])
@@ -118,10 +118,11 @@ model PasswordResetToken {
   @@index([clienteId])
   @@index([expiresAt])
 }
+
 model TicketMensagem {
-  id        String   @id @default(cuid())
-  ticketId  String
-  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  ticketId String
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
   autorTipo String
   mensagem  String
@@ -133,36 +134,99 @@ model TicketMensagem {
 }
 
 model Post {
-  id             String    @id @default(cuid())
-  titulo         String
-  slug           String    @unique
-  resumo         String
-  conteudo       String    @db.Text
+  id       String @id @default(cuid())
+  titulo   String
+  slug     String @unique
+  resumo   String
+  conteudo String @db.Text
 
   categoria      String
   leituraMinutos Int?
   imagemCapa     String?
 
-  status         String    @default("RASCUNHO")
-  destaque       Boolean   @default(false)
+  status   String  @default("RASCUNHO")
+  destaque Boolean @default(false)
 
-  regioes        String[]  @default([])
-  servicos       String[]  @default([])
+  regioes  String[] @default([])
+  servicos String[] @default([])
 
   seoTitle       String?
   seoDescription String?
   canonical      String?
 
-  ctaTexto       String?
-  ctaUrl         String?
+  ctaTexto String?
+  ctaUrl   String?
 
-  publicadoEm    DateTime?
-  agendadoPara   DateTime?
+  publicadoEm  DateTime?
+  agendadoPara DateTime?
 
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([status, publicadoEm])
   @@index([categoria])
   @@index([destaque])
+}
+
+enum UsuarioPapel {
+  SUPER_ADMIN
+  ADMIN
+  COMERCIAL
+  FINANCEIRO
+  SUPORTE
+  CONTEUDO
+}
+
+model Usuario {
+  id                  String                      @id @default(cuid())
+  nome                String
+  email               String                      @unique
+  senhaHash           String
+  papel               UsuarioPapel
+  ativo               Boolean                     @default(true)
+  sessionVersion      Int                         @default(0)
+  ultimoLoginEm       DateTime?
+  createdAt           DateTime                    @default(now())
+  updatedAt           DateTime                    @updatedAt
+  passwordResetTokens UsuarioPasswordResetToken[]
+
+  @@index([papel])
+  @@index([ativo])
+  @@index([createdAt])
+}
+
+model UsuarioPasswordResetToken {
+  id        String    @id @default(cuid())
+  usuarioId String
+  usuario   Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([usuarioId])
+  @@index([expiresAt])
+}
+
+model UsuarioLoginAttempt {
+  id        String   @id @default(cuid())
+  email     String
+  sucesso   Boolean
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([email, createdAt])
+  @@index([createdAt])
+}
+
+model LeadEmailRecipient {
+  id        String   @id @default(cuid())
+  nome      String
+  email     String   @unique
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ativo])
+  @@index([createdAt])
 }

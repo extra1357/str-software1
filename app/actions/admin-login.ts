@@ -2,61 +2,123 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 import {
-  ADMIN_COOKIE_NAME,
-  criarAdminSessionToken,
-} from "@/lib/auth-admin";
-
-const ADMIN_SESSION_DURATION_SECONDS = 60 * 60 * 24;
+  USUARIO_ADMIN_COOKIE,
+  USUARIO_ADMIN_SESSION_MAX_AGE,
+  criarUsuarioSessionToken,
+  estaTravadoUsuarioPorRateLimit,
+  registrarTentativaUsuarioLogin,
+  verificarSenhaUsuario,
+} from "@/lib/auth-usuario";
 
 export async function adminLogin(formData: FormData) {
-  const user = formData.get("user");
-  const password = formData.get("password");
+  const emailRecebido = formData.get("email");
+  const senhaRecebida = formData.get("password");
+
+  const email =
+    typeof emailRecebido === "string"
+      ? emailRecebido.trim().toLowerCase()
+      : "";
+
+  const senha =
+    typeof senhaRecebida === "string"
+      ? senhaRecebida
+      : "";
 
   if (
-    typeof user !== "string" ||
-    typeof password !== "string" ||
-    user !== process.env.ADMIN_USER ||
-    password !== process.env.ADMIN_PASSWORD
+    !email ||
+    email.length > 254 ||
+    !senha ||
+    senha.length > 128
   ) {
+    redirect("/login?error=true");
+  }
+
+  const bloqueado =
+    await estaTravadoUsuarioPorRateLimit(email);
+
+  if (bloqueado) {
     console.warn(
-      "[admin-login] tentativa de login administrativo invalida"
+      "[admin-login] tentativa limitada por rate limit",
+    );
+
+    redirect("/login?error=blocked");
+  }
+
+  const usuario = await prisma.usuario.findUnique({
+    where: {
+      email,
+    },
+    select: {
+      id: true,
+      email: true,
+      senhaHash: true,
+      papel: true,
+      ativo: true,
+      sessionVersion: true,
+    },
+  });
+
+  const senhaValida =
+    usuario && usuario.ativo
+      ? await verificarSenhaUsuario(
+          senha,
+          usuario.senhaHash,
+        )
+      : false;
+
+  if (!usuario || !usuario.ativo || !senhaValida) {
+    await registrarTentativaUsuarioLogin(
+      email,
+      false,
+      null,
+    );
+
+    console.warn(
+      "[admin-login] tentativa administrativa inválida",
     );
 
     redirect("/login?error=true");
   }
 
-  let token: string;
+  await registrarTentativaUsuarioLogin(
+    email,
+    true,
+    null,
+  );
 
-  try {
-    token = criarAdminSessionToken();
-  } catch (erro) {
-    console.error(
-      "[admin-login] falha ao criar sessao administrativa",
-      erro
-    );
+  const token = criarUsuarioSessionToken(
+    usuario.id,
+    usuario.papel,
+    usuario.sessionVersion,
+  );
 
-    throw new Error(
-      "Nao foi possivel iniciar a sessao administrativa."
-    );
-  }
+  await prisma.usuario.update({
+    where: {
+      id: usuario.id,
+    },
+    data: {
+      ultimoLoginEm: new Date(),
+    },
+  });
 
   const cookieStore = await cookies();
 
   cookieStore.set(
-    ADMIN_COOKIE_NAME,
+    USUARIO_ADMIN_COOKIE,
     token,
     {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       path: "/",
       sameSite: "strict",
-      maxAge: ADMIN_SESSION_DURATION_SECONDS,
-    }
+      maxAge: USUARIO_ADMIN_SESSION_MAX_AGE,
+    },
   );
 
-  console.log(
-    "[admin-login] sessao administrativa criada com sucesso"
+  console.info(
+    `[admin-login] sessão criada para usuário ${usuario.id}`,
   );
 
   redirect("/admin");

@@ -1,5 +1,8 @@
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { NextRequest, NextResponse } from "next/server";
+import {
+  verificarUsuarioSessionToken,
+} from "@/lib/auth-usuario-token";
 
 export const ADMIN_COOKIE_NAME =
   process.env.ADMIN_COOKIE_NAME || "admin-auth";
@@ -89,16 +92,23 @@ export function verificarAdminSessionToken(
 }
 
 export function isAdminCookieAutenticado(
-  valorCookie: string | undefined
+  valorCookie: string | undefined,
 ): boolean {
-  return verificarAdminSessionToken(valorCookie);
+  return (
+    verificarAdminSessionToken(valorCookie) ||
+    verificarUsuarioSessionToken(valorCookie) !== null
+  );
 }
 
 export function isAdminAutenticado(
-  request: NextRequest
+  request: NextRequest,
 ): boolean {
-  return verificarAdminSessionToken(
-    request.cookies.get(ADMIN_COOKIE_NAME)?.value
+  const token =
+    request.cookies.get(ADMIN_COOKIE_NAME)?.value;
+
+  return (
+    verificarAdminSessionToken(token) ||
+    verificarUsuarioSessionToken(token) !== null
   );
 }
 
