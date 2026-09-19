@@ -236,6 +236,17 @@ model LeadEmailRecipient {
 // MODELOS ACADEMICOS
 // ============================================================
 
+enum AcademyAcessoTrilha {
+  PUBLICA
+  ALUNOS
+  INTERNA
+}
+
+enum AcademyStatusEditorial {
+  RASCUNHO
+  PUBLICADA
+  ARQUIVADA
+}
 enum AcademyNivel {
   APRENDIZ
   JUNIOR
@@ -271,6 +282,8 @@ model AcademyTrilha {
   slug       String             @unique
   descricao  String?
   nivel      AcademyNivel
+  acesso     AcademyAcessoTrilha     @default(ALUNOS)
+  statusEditorial AcademyStatusEditorial @default(RASCUNHO)
   ativo      Boolean            @default(true)
   createdAt  DateTime           @default(now())
   updatedAt  DateTime           @updatedAt
@@ -282,6 +295,8 @@ model AcademyModulo {
   id        String        @id @default(cuid())
   trilhaId  String
   titulo    String
+  descricao String?
+  statusEditorial AcademyStatusEditorial @default(RASCUNHO)
   ordem     Int
   ativo     Boolean       @default(true)
   createdAt DateTime      @default(now())
@@ -298,7 +313,10 @@ model AcademyAula {
   moduloId   String
   titulo     String
   slug       String
+  resumo     String?
   conteudo   String
+  conteudoEstruturado Json?
+  statusEditorial AcademyStatusEditorial @default(RASCUNHO)
   ordem      Int
   ativo      Boolean                @default(true)
   createdAt  DateTime               @default(now())
