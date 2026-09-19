@@ -230,3 +230,164 @@ model LeadEmailRecipient {
   @@index([ativo])
   @@index([createdAt])
 }
+
+// ============================================================
+// STR ACADEMY
+// MODELOS ACADEMICOS
+// ============================================================
+
+enum AcademyNivel {
+  APRENDIZ
+  JUNIOR
+  OPERACIONAL
+}
+
+enum AcademyMatriculaStatus {
+  ATIVA
+  CONCLUIDA
+  CANCELADA
+}
+
+model AcademyAluno {
+  id                      String                          @id @default(cuid())
+  nome                    String
+  email                   String                          @unique
+  senhaHash               String
+  ativo                   Boolean                         @default(true)
+  emailVerificadoEm       DateTime?
+  sessionVersion          Int                             @default(0)
+  createdAt               DateTime                        @default(now())
+  updatedAt               DateTime                        @updatedAt
+  matriculas              AcademyMatricula[]
+  progressos              AcademyProgressoAula[]
+  loginAttempts           AcademyLoginAttempt[]
+  passwordResetTokens     AcademyPasswordResetToken[]
+  emailVerificationTokens AcademyEmailVerificationToken[]
+}
+
+model AcademyTrilha {
+  id         String             @id @default(cuid())
+  titulo     String
+  slug       String             @unique
+  descricao  String?
+  nivel      AcademyNivel
+  ativo      Boolean            @default(true)
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+  modulos    AcademyModulo[]
+  matriculas AcademyMatricula[]
+}
+
+model AcademyModulo {
+  id        String        @id @default(cuid())
+  trilhaId  String
+  titulo    String
+  ordem     Int
+  ativo     Boolean       @default(true)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  trilha    AcademyTrilha @relation(fields: [trilhaId], references: [id], onDelete: Cascade)
+  aulas     AcademyAula[]
+
+  @@unique([trilhaId, ordem])
+  @@index([trilhaId])
+}
+
+model AcademyAula {
+  id         String                 @id @default(cuid())
+  moduloId   String
+  titulo     String
+  slug       String
+  conteudo   String
+  ordem      Int
+  ativo      Boolean                @default(true)
+  createdAt  DateTime               @default(now())
+  updatedAt  DateTime               @updatedAt
+  modulo     AcademyModulo          @relation(fields: [moduloId], references: [id], onDelete: Cascade)
+  progressos AcademyProgressoAula[]
+
+  @@unique([moduloId, slug])
+  @@unique([moduloId, ordem])
+  @@index([moduloId])
+}
+
+model AcademyMatricula {
+  id            String                 @id @default(cuid())
+  alunoId       String
+  trilhaId      String
+  status        AcademyMatriculaStatus @default(ATIVA)
+  matriculadoEm DateTime               @default(now())
+  concluidaEm   DateTime?
+  aluno         AcademyAluno           @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+  trilha        AcademyTrilha          @relation(fields: [trilhaId], references: [id], onDelete: Cascade)
+
+  @@unique([alunoId, trilhaId])
+  @@index([alunoId])
+  @@index([trilhaId])
+}
+
+model AcademyProgressoAula {
+  id          String       @id @default(cuid())
+  alunoId     String
+  aulaId      String
+  concluida   Boolean      @default(false)
+  concluidaEm DateTime?
+  updatedAt   DateTime     @updatedAt
+  aluno       AcademyAluno @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+  aula        AcademyAula  @relation(fields: [aulaId], references: [id], onDelete: Cascade)
+
+  @@unique([alunoId, aulaId])
+  @@index([alunoId])
+  @@index([aulaId])
+}
+
+model AcademyLoginAttempt {
+  id        String        @id @default(cuid())
+  alunoId   String?
+  email     String
+  sucesso   Boolean
+  ip        String?
+  createdAt DateTime      @default(now())
+  aluno     AcademyAluno? @relation(fields: [alunoId], references: [id], onDelete: SetNull)
+
+  @@index([email, createdAt])
+  @@index([alunoId])
+}
+
+model AcademyPasswordResetToken {
+  id        String       @id @default(cuid())
+  alunoId   String
+  tokenHash String       @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime     @default(now())
+  aluno     AcademyAluno @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+
+  @@index([alunoId])
+  @@index([expiresAt])
+}
+
+model AcademyEmailVerificationToken {
+  id        String       @id @default(cuid())
+  alunoId   String
+  tokenHash String       @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime     @default(now())
+  aluno     AcademyAluno @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+
+  @@index([alunoId])
+  @@index([expiresAt])
+}
+
+model AcademyCadastroAttempt {
+  id        String   @id @default(cuid())
+  email     String
+  ip        String?
+  sucesso   Boolean
+  createdAt DateTime @default(now())
+
+  @@index([email, createdAt])
+  @@index([ip, createdAt])
+  @@index([createdAt])
+}
