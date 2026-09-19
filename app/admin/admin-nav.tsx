@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { adminLogout } from "@/app/actions/admin-logout";
+import { papelPodeAcessarAcademy } from "@/lib/rbac-politicas";
 
 type AdminNavProps = {
   papel?: string;
@@ -36,10 +37,23 @@ export default function AdminNav({
 }: AdminNavProps) {
   const pathname = usePathname();
 
+  const podeAcessarAcademy =
+    papelPodeAcessarAcademy(papel);
+
+  const fichasBase = podeAcessarAcademy
+    ? [
+        ...FICHAS,
+        {
+          href: "/admin/academy",
+          rotulo: "STR Academy",
+        },
+      ]
+    : FICHAS;
+
   const fichas =
     papel === "SUPER_ADMIN"
       ? [
-          ...FICHAS,
+          ...fichasBase,
           {
             href: "/admin/destinatarios-leads",
             rotulo: "E-mails dos leads",
@@ -49,7 +63,7 @@ export default function AdminNav({
             rotulo: "Usuários",
           },
         ]
-      : FICHAS;
+      : fichasBase;
 
   return (
     <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
