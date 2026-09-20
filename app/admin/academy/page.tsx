@@ -7,7 +7,7 @@ import {
 } from "@/lib/auth-usuario";
 import { exigirPapelUsuario } from "@/lib/auth-rbac";
 import { PAPEIS_ACADEMY_ADMIN } from "@/lib/rbac-politicas";
-
+import AcademyTrilhasAdmin from "./academy-trilhas-admin";
 
 export default async function AcademyAdminPage() {
   const cookieStore = await cookies();
@@ -62,6 +62,8 @@ export default async function AcademyAdminPage() {
           </div>
         </div>
       </div>
+
+        <AcademyTrilhasAdmin />
     </main>
   );
 }
