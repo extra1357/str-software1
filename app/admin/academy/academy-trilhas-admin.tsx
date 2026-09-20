@@ -1,5 +1,7 @@
 "use client";
 
+import AcademyModulosAdmin from "./academy-modulos-admin";
+
 import { FormEvent, useCallback, useEffect, useState } from "react";
 
 type Nivel = "APRENDIZ" | "JUNIOR" | "OPERACIONAL";
@@ -89,6 +91,7 @@ export default function AcademyTrilhasAdmin() {
     useState<Formulario>(FORMULARIO_VAZIO);
 
   const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [trilhaModulosId, setTrilhaModulosId] = useState<string | null>(null);
   const [slugManual, setSlugManual] = useState(false);
 
   const [carregando, setCarregando] = useState(true);
@@ -262,6 +265,18 @@ export default function AcademyTrilhasAdmin() {
     } finally {
       setSalvando(false);
     }
+  }
+
+  if (trilhaModulosId) {
+    return (
+      <AcademyModulosAdmin
+        trilhaId={trilhaModulosId}
+        onFechar={() => {
+          setTrilhaModulosId(null);
+          void carregarTrilhas();
+        }}
+      />
+    );
   }
 
   return (
@@ -550,13 +565,27 @@ export default function AcademyTrilhasAdmin() {
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => editarTrilha(trilha)}
-                    className="shrink-0 rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-sm font-bold text-blue-300 transition hover:bg-blue-500/20"
-                  >
-                    Editar
-                  </button>
+                  <div className="flex shrink-0 flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTrilhaModulosId(trilha.id);
+                        setErro("");
+                        setSucesso("");
+                      }}
+                      className="rounded-lg border border-amber-400/30 bg-amber-400/10 px-4 py-2 text-sm font-bold text-amber-200 transition hover:bg-amber-400/20"
+                    >
+                      Modulos
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => editarTrilha(trilha)}
+                      className="rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-sm font-bold text-blue-300 transition hover:bg-blue-500/20"
+                    >
+                      Editar
+                    </button>
+                  </div>
                 </div>
               </article>
             ))}
