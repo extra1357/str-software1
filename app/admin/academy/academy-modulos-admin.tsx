@@ -2,6 +2,8 @@
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 
+import AcademyAulasAdmin from "./academy-aulas-admin";
+
 type StatusEditorial = "RASCUNHO" | "PUBLICADA" | "ARQUIVADA";
 
 type Modulo = {
@@ -74,6 +76,7 @@ export default function AcademyModulosAdmin({
     formularioInicial(1),
   );
   const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [moduloAulasId, setModuloAulasId] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
@@ -261,6 +264,18 @@ export default function AcademyModulosAdmin({
     } finally {
       setSalvando(false);
     }
+  }
+
+  if (moduloAulasId) {
+    return (
+      <AcademyAulasAdmin
+        moduloId={moduloAulasId}
+        onFechar={() => {
+          setModuloAulasId(null);
+          void carregarTrilha();
+        }}
+      />
+    );
   }
 
   return (
@@ -503,13 +518,29 @@ export default function AcademyModulosAdmin({
                   ) : null}
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => editarModulo(modulo)}
-                  className="shrink-0 rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-sm font-bold text-blue-300 transition hover:bg-blue-500/20"
-                >
-                  Editar
-                </button>
+                <div className="flex shrink-0 flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      console.info(
+                        `[ACADEMY][CMS][MODULOS][UI][AULAS] Abrindo aulas modulo=${modulo.id}`,
+                      );
+
+                      setModuloAulasId(modulo.id);
+                    }}
+                    className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm font-bold text-emerald-300 transition hover:bg-emerald-500/20"
+                  >
+                    Aulas
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => editarModulo(modulo)}
+                    className="rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-sm font-bold text-blue-300 transition hover:bg-blue-500/20"
+                  >
+                    Editar
+                  </button>
+                </div>
               </article>
             ))}
           </div>
