@@ -1,5 +1,13 @@
 "use client";
 
+import AcademyConteudoEditor from "./academy-conteudo-editor";
+import {
+  academyConteudoEstruturadoSchema,
+  conteudoEstruturadoParaTexto,
+  criarConteudoEstruturadoVazio,
+  type AcademyConteudoEstruturado,
+} from "@/lib/academy-conteudo";
+
 import {
   FormEvent,
   useCallback,
@@ -47,6 +55,8 @@ type FormularioAula = {
   slug: string;
   resumo: string;
   conteudo: string;
+  conteudoEstruturado: AcademyConteudoEstruturado;
+  modoLegado: boolean;
   ordem: number;
   statusEditorial: StatusEditorial;
   ativo: boolean;
@@ -81,6 +91,8 @@ function formularioInicial(ordem: number): FormularioAula {
     slug: "",
     resumo: "",
     conteudo: "",
+    conteudoEstruturado: criarConteudoEstruturadoVazio(),
+    modoLegado: false,
     ordem,
     statusEditorial: "RASCUNHO",
     ativo: true,
@@ -186,11 +198,19 @@ export default function AcademyAulasAdmin({
     setEditandoId(aula.id);
     setSlugAlteradoManual(true);
 
+    const documento = academyConteudoEstruturadoSchema.safeParse(
+      aula.conteudoEstruturado,
+    );
+
     setFormulario({
       titulo: aula.titulo,
       slug: aula.slug,
       resumo: aula.resumo ?? "",
       conteudo: aula.conteudo,
+      conteudoEstruturado: documento.success
+        ? documento.data
+        : criarConteudoEstruturadoVazio(),
+      modoLegado: !documento.success,
       ordem: aula.ordem,
       statusEditorial: aula.statusEditorial,
       ativo: aula.ativo,
@@ -215,6 +235,48 @@ export default function AcademyAulasAdmin({
     }));
   }
 
+  function converterConteudoLegado() {
+    const textoLegado = formulario.conteudo.trim();
+
+    if (!textoLegado) {
+      setErro("Nao existe conteudo legado para converter.");
+      return;
+    }
+
+    setErro(null);
+    setSucesso(null);
+
+    setFormulario((atual) => ({
+      ...atual,
+      conteudoEstruturado: {
+        versao: 1,
+        blocos: [
+          {
+            id:
+              typeof crypto !== "undefined" &&
+              typeof crypto.randomUUID === "function"
+                ? crypto.randomUUID()
+                : `bloco-${Date.now()}`,
+            tipo: "PARAGRAFO",
+            texto: atual.conteudo,
+          },
+        ],
+      },
+      modoLegado: false,
+    }));
+
+    console.info(
+      "[ACADEMY][CMS][AULAS][UI] Conteudo legado preparado para editor visual",
+      {
+        aulaId: editandoId,
+        moduloId,
+      },
+    );
+
+    setSucesso(
+      "Conteudo carregado no editor visual. Revise os blocos e salve a aula para concluir a conversao.",
+    );
+  }
   async function salvarAula(evento: FormEvent) {
     evento.preventDefault();
 
@@ -225,7 +287,14 @@ export default function AcademyAulasAdmin({
       titulo: formulario.titulo.trim(),
       slug: formulario.slug.trim(),
       resumo: formulario.resumo.trim() || null,
-      conteudo: formulario.conteudo.trim(),
+      conteudo: formulario.modoLegado
+        ? formulario.conteudo.trim()
+        : conteudoEstruturadoParaTexto(
+            formulario.conteudoEstruturado,
+          ),
+      conteudoEstruturado: formulario.modoLegado
+        ? undefined
+        : formulario.conteudoEstruturado,
       ordem: Number(formulario.ordem),
       statusEditorial: formulario.statusEditorial,
       ativo: formulario.ativo,
@@ -425,7 +494,7 @@ export default function AcademyAulasAdmin({
           </h3>
 
           <p className="mt-1 text-sm text-slate-400">
-            Cadastre o conteudo editorial da aula. O editor visual sera incorporado em uma etapa posterior.
+            Cadastre e organize o conteudo da aula utilizando o editor visual por blocos.
           </p>
         </div>
 
@@ -487,25 +556,59 @@ export default function AcademyAulasAdmin({
           />
         </label>
 
-        <label className="block space-y-2">
-          <span className="text-sm font-medium text-slate-200">
+        <div className="space-y-3">
+          <span className="block text-sm font-medium text-slate-200">
             Conteudo
           </span>
 
-          <textarea
-            value={formulario.conteudo}
-            onChange={(evento) =>
-              setFormulario((atual) => ({
-                ...atual,
-                conteudo: evento.target.value,
-              }))
-            }
-            rows={12}
-            required
-            className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white outline-none focus:border-emerald-500"
-            placeholder="Conteudo textual provisório da aula"
-          />
-        </label>
+          {formulario.modoLegado ? (
+            <div className="space-y-4 rounded-xl border border-amber-800/60 bg-amber-950/20 p-4">
+              <div>
+                <p className="text-sm font-semibold text-amber-200">
+                  Conteudo no formato anterior
+                </p>
+
+                <p className="mt-1 text-xs leading-5 text-amber-100/70">
+                  Esta aula ainda utiliza o conteudo textual original.
+                  Nada sera convertido automaticamente.
+                </p>
+              </div>
+
+              <textarea
+                value={formulario.conteudo}
+                readOnly
+                rows={12}
+                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-300 outline-none"
+              />
+
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={converterConteudoLegado}
+                  disabled={salvando}
+                  className="rounded-lg border border-amber-700 bg-amber-950/40 px-4 py-2 text-sm font-semibold text-amber-200 hover:bg-amber-950/70 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Converter conteudo atual para editor visual
+                </button>
+
+                <span className="text-xs text-slate-500">
+                  A conversao somente sera gravada quando voce salvar a aula.
+                </span>
+              </div>
+            </div>
+          ) : (
+            <AcademyConteudoEditor
+              valor={formulario.conteudoEstruturado}
+              disabled={salvando}
+              onChange={(conteudoEstruturado) =>
+                setFormulario((atual) => ({
+                  ...atual,
+                  conteudoEstruturado,
+                }))
+              }
+            />
+          )}
+        </div>
 
         <div className="grid gap-5 md:grid-cols-3">
           <label className="space-y-2">

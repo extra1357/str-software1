@@ -5,6 +5,10 @@ import { z } from "zod";
 import { exigirUsuarioAdmin } from "@/lib/auth-rbac";
 import { PAPEIS_ACADEMY_ADMIN } from "@/lib/rbac-politicas";
 import { prisma } from "@/lib/prisma";
+import {
+  academyConteudoEstruturadoSchema,
+  conteudoEstruturadoParaTexto,
+} from "@/lib/academy-conteudo";
 
 const aulaSchema = z.object({
   titulo: z.string().trim().min(3).max(160),
@@ -16,7 +20,8 @@ const aulaSchema = z.object({
     .optional()
     .nullable()
     .transform((valor) => valor || null),
-  conteudo: z.string().trim().min(1),
+  conteudo: z.string().trim().min(1).optional(),
+  conteudoEstruturado: academyConteudoEstruturadoSchema.nullable().optional(),
   ordem: z.number().int().min(1).max(9999),
   statusEditorial: z.enum(["RASCUNHO", "PUBLICADA", "ARQUIVADA"]),
   ativo: z.boolean(),
@@ -88,6 +93,23 @@ export async function PATCH(
       );
     }
 
+    const conteudoFinal =
+      validacao.data.conteudoEstruturado !== undefined &&
+      validacao.data.conteudoEstruturado !== null
+        ? conteudoEstruturadoParaTexto(validacao.data.conteudoEstruturado)
+        : validacao.data.conteudo;
+
+    if (!conteudoFinal) {
+      console.warn("[ACADEMY][CMS][AULAS][PATCH] Conteudo vazio", {
+        aulaId: id,
+      });
+
+      return NextResponse.json(
+        { erro: "A aula precisa possuir conteudo." },
+        { status: 400 },
+      );
+    }
+
     const aula = await prisma.academyAula.update({
       where: {
         id,
@@ -96,7 +118,15 @@ export async function PATCH(
         titulo: validacao.data.titulo,
         slug: validacao.data.slug,
         resumo: validacao.data.resumo,
-        conteudo: validacao.data.conteudo,
+        conteudo: conteudoFinal,
+        ...(validacao.data.conteudoEstruturado !== undefined
+          ? {
+              conteudoEstruturado:
+                validacao.data.conteudoEstruturado === null
+                  ? Prisma.DbNull
+                  : validacao.data.conteudoEstruturado,
+            }
+          : {}),
         ordem: validacao.data.ordem,
         statusEditorial: validacao.data.statusEditorial,
         ativo: validacao.data.ativo,
