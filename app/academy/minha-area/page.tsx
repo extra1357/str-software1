@@ -1,36 +1,163 @@
 import Link from "next/link";
-
-import { AcademyLogoutButton } from "@/app/academy/_components/academy-logout-button";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { AcademyLogoutButton } from "@/app/academy/_components/academy-logout-button";
 import {
   ACADEMY_SESSION_COOKIE,
   obterAcademyAlunoPorToken,
 } from "@/lib/auth-academy";
+import { prisma } from "@/lib/prisma";
+
+function nivelParaTexto(nivel: string) {
+  switch (nivel) {
+    case "APRENDIZ":
+      return "Aprendiz";
+    case "JUNIOR":
+      return "Júnior";
+    case "OPERACIONAL":
+      return "Operacional";
+    default:
+      return nivel;
+  }
+}
 
 export default async function AcademyMinhaAreaPage() {
   const cookieStore = await cookies();
+  const token = cookieStore.get(ACADEMY_SESSION_COOKIE)?.value;
 
-  const token =
-    cookieStore.get(
-      ACADEMY_SESSION_COOKIE,
-    )?.value;
-
-  const aluno =
-    await obterAcademyAlunoPorToken(
-      token,
-    );
+  const aluno = await obterAcademyAlunoPorToken(token);
 
   if (!aluno) {
     redirect("/academy/login");
   }
 
   const primeiroNome =
-    aluno.nome
-      .trim()
-      .split(/\s+/)[0] ||
-    "Aluno";
+    aluno.nome.trim().split(/\s+/)[0] || "Aluno";
+
+  /*
+   * Segurança:
+   * alunoId vem exclusivamente da sessão autenticada.
+   * Nenhum identificador de aluno é recebido da URL ou do navegador.
+   */
+  const matriculas = await prisma.academyMatricula.findMany({
+    where: {
+      alunoId: aluno.id,
+      status: {
+        in: ["ATIVA", "CONCLUIDA"],
+      },
+      trilha: {
+        ativo: true,
+        statusEditorial: "PUBLICADA",
+      },
+    },
+    orderBy: {
+      matriculadoEm: "desc",
+    },
+    select: {
+      id: true,
+      status: true,
+      matriculadoEm: true,
+      concluidaEm: true,
+      trilha: {
+        select: {
+          id: true,
+          titulo: true,
+          slug: true,
+          descricao: true,
+          nivel: true,
+          modulos: {
+            where: {
+              ativo: true,
+              statusEditorial: "PUBLICADA",
+            },
+            orderBy: {
+              ordem: "asc",
+            },
+            select: {
+              id: true,
+              aulas: {
+                where: {
+                  ativo: true,
+                  statusEditorial: "PUBLICADA",
+                },
+                orderBy: {
+                  ordem: "asc",
+                },
+                select: {
+                  id: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const aulaIds = matriculas.flatMap((matricula) =>
+    matricula.trilha.modulos.flatMap((modulo) =>
+      modulo.aulas.map((aula) => aula.id),
+    ),
+  );
+
+  const progressos =
+    aulaIds.length > 0
+      ? await prisma.academyProgressoAula.findMany({
+          where: {
+            alunoId: aluno.id,
+            aulaId: {
+              in: aulaIds,
+            },
+            concluida: true,
+          },
+          select: {
+            aulaId: true,
+          },
+        })
+      : [];
+
+  const aulasConcluidas = new Set(
+    progressos.map((progresso) => progresso.aulaId),
+  );
+
+  const trilhas = matriculas.map((matricula) => {
+    const idsDaTrilha = matricula.trilha.modulos.flatMap(
+      (modulo) => modulo.aulas.map((aula) => aula.id),
+    );
+
+    const totalAulas = idsDaTrilha.length;
+    const concluidas = idsDaTrilha.filter((id) =>
+      aulasConcluidas.has(id),
+    ).length;
+
+    const percentual =
+      totalAulas === 0
+        ? 0
+        : Math.round((concluidas / totalAulas) * 100);
+
+    return {
+      ...matricula,
+      totalAulas,
+      concluidas,
+      percentual,
+    };
+  });
+
+  const totalAulas = trilhas.reduce(
+    (total, item) => total + item.totalAulas,
+    0,
+  );
+
+  const totalConcluidas = trilhas.reduce(
+    (total, item) => total + item.concluidas,
+    0,
+  );
+
+  const progressoGeral =
+    totalAulas === 0
+      ? 0
+      : Math.round((totalConcluidas / totalAulas) * 100);
 
   return (
     <main className="min-h-screen bg-[#f4f2ed] text-zinc-900">
@@ -61,9 +188,7 @@ export default async function AcademyMinhaAreaPage() {
             </span>
 
             <span className="flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-white text-sm font-semibold">
-              {primeiroNome
-                .charAt(0)
-                .toUpperCase()}
+              {primeiroNome.charAt(0).toUpperCase()}
             </span>
 
             <AcademyLogoutButton />
@@ -82,9 +207,8 @@ export default async function AcademyMinhaAreaPage() {
           </h1>
 
           <p className="mt-3 max-w-2xl text-base leading-7 text-zinc-600">
-            Este é o seu espaço de aprendizagem.
-            Aqui você acompanhará suas trilhas,
-            aulas e evolução dentro da STR Academy.
+            Acompanhe suas trilhas, aulas e sua evolução
+            dentro da STR Academy.
           </p>
         </div>
 
@@ -95,12 +219,13 @@ export default async function AcademyMinhaAreaPage() {
             </p>
 
             <p className="mt-4 text-3xl font-semibold">
-              —
+              {trilhas.length}
             </p>
 
             <p className="mt-2 text-sm leading-6 text-zinc-500">
-              Suas trilhas matriculadas aparecerão
-              aqui.
+              {trilhas.length === 1
+                ? "trilha disponível para você"
+                : "trilhas disponíveis para você"}
             </p>
           </article>
 
@@ -110,63 +235,126 @@ export default async function AcademyMinhaAreaPage() {
             </p>
 
             <p className="mt-4 text-3xl font-semibold">
-              —
+              {progressoGeral}%
             </p>
 
             <p className="mt-2 text-sm leading-6 text-zinc-500">
-              O avanço nas aulas será acompanhado
-              por esta área.
+              {totalConcluidas} de {totalAulas} aulas concluídas
             </p>
           </article>
 
           <article className="rounded-2xl border border-black/10 bg-white p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">
-              Nível atual
+              Aulas concluídas
             </p>
 
-            <p className="mt-4 text-xl font-semibold">
-              Em preparação
+            <p className="mt-4 text-3xl font-semibold">
+              {totalConcluidas}
             </p>
 
             <p className="mt-2 text-sm leading-6 text-zinc-500">
-              Aprendiz, Júnior e Operacional serão
-              vinculados à sua evolução.
+              Seu progresso é individual e vinculado à sua conta.
             </p>
           </article>
         </div>
 
-        <section className="mt-8 rounded-3xl border border-black/10 bg-white p-7 sm:p-9">
-          <div className="flex flex-col justify-between gap-6 md:flex-row md:items-center">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#9a6916]">
-                Formação
-              </p>
+        <section className="mt-8">
+          <div className="mb-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#9a6916]">
+              Formação
+            </p>
 
-              <h2 className="mt-2 text-2xl font-semibold tracking-tight">
-                Suas trilhas aparecerão aqui
-              </h2>
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight">
+              Minhas trilhas
+            </h2>
+          </div>
+
+          {trilhas.length === 0 ? (
+            <div className="rounded-3xl border border-black/10 bg-white p-8 sm:p-10">
+              <h3 className="text-xl font-semibold">
+                Nenhuma trilha disponível no momento
+              </h3>
 
               <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-600">
-                Quando as matrículas e os conteúdos
-                publicados pelo CMS estiverem
-                vinculados à sua conta, esta área
-                será preenchida automaticamente.
+                Quando uma matrícula ativa estiver vinculada à sua
+                conta e a trilha estiver publicada, ela aparecerá
+                automaticamente aqui.
               </p>
             </div>
+          ) : (
+            <div className="grid gap-5 lg:grid-cols-2">
+              {trilhas.map((matricula) => (
+                <article
+                  key={matricula.id}
+                  className="rounded-3xl border border-black/10 bg-white p-7"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#9a6916]">
+                        {nivelParaTexto(matricula.trilha.nivel)}
+                      </p>
 
-            <div className="shrink-0 rounded-2xl border border-dashed border-[#b77b16]/40 bg-[#b77b16]/5 px-6 py-5 text-center">
-              <p className="text-sm font-semibold text-[#8b6219]">
-                Ambiente preparado
-              </p>
+                      <h3 className="mt-2 text-xl font-semibold">
+                        {matricula.trilha.titulo}
+                      </h3>
+                    </div>
 
-              <p className="mt-1 text-xs text-zinc-500">
-                Conteúdos em breve
-              </p>
+                    <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-600">
+                      {matricula.status === "CONCLUIDA"
+                        ? "Concluída"
+                        : "Em andamento"}
+                    </span>
+                  </div>
+
+                  {matricula.trilha.descricao && (
+                    <p className="mt-4 text-sm leading-6 text-zinc-600">
+                      {matricula.trilha.descricao}
+                    </p>
+                  )}
+
+                  <div className="mt-6">
+                    <div className="mb-2 flex items-center justify-between gap-4 text-sm">
+                      <span className="font-medium">
+                        Progresso
+                      </span>
+
+                      <span className="text-zinc-500">
+                        {matricula.percentual}%
+                      </span>
+                    </div>
+
+                    <div className="h-2 overflow-hidden rounded-full bg-zinc-200">
+                      <div
+                        className="h-full rounded-full bg-[#b77b16]"
+                        style={{
+                          width: `${matricula.percentual}%`,
+                        }}
+                      />
+                    </div>
+
+                    <p className="mt-2 text-xs text-zinc-500">
+                      {matricula.concluidas} de{" "}
+                      {matricula.totalAulas} aulas concluídas
+                    </p>
+                  </div>
+
+                  <div className="mt-6">
+                    <Link
+                      href={`/academy/trilhas/${matricula.trilha.slug}`}
+                      className="inline-flex h-11 items-center justify-center rounded-xl bg-zinc-950 px-5 text-sm font-semibold text-white transition hover:bg-zinc-800"
+                    >
+                      {matricula.percentual > 0
+                        ? "Continuar trilha"
+                        : "Começar trilha"}
+                    </Link>
+                  </div>
+                </article>
+              ))}
             </div>
-          </div>
+          )}
         </section>
 
-        <div className="mt-8 flex flex-wrap gap-3">
+        <div className="mt-8">
           <Link
             href="/academy"
             className="inline-flex h-11 items-center justify-center rounded-xl border border-black/10 bg-white px-5 text-sm font-semibold transition hover:bg-zinc-50"

@@ -12,7 +12,7 @@ import {
   FormEvent,
   useCallback,
   useEffect,
-  useState,
+  useState, useRef,
 } from "react";
 
 type StatusEditorial =
@@ -113,6 +113,8 @@ export default function AcademyAulasAdmin({
 
   const [editandoId, setEditandoId] =
     useState<string | null>(null);
+
+  const formularioRef = useRef<HTMLFormElement | null>(null);
 
   const [slugAlteradoManual, setSlugAlteradoManual] =
     useState(false);
@@ -218,6 +220,13 @@ export default function AcademyAulasAdmin({
 
     setErro(null);
     setSucesso(null);
+
+    requestAnimationFrame(() => {
+      formularioRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
 
     console.info("[ACADEMY][CMS][AULAS][UI] Editando aula", {
       aulaId: aula.id,
@@ -485,6 +494,7 @@ export default function AcademyAulasAdmin({
       )}
 
       <form
+        ref={formularioRef}
         onSubmit={salvarAula}
         className="space-y-5 rounded-2xl border border-slate-800 bg-slate-950/60 p-6"
       >
