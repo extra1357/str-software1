@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import Script from "next/script";
 import { Suspense } from "react";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import AcademyInvitePopup from "@/components/AcademyInvitePopup";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -46,6 +47,7 @@ export default function RootLayout({
           </>
         )}
         {children}
+        <AcademyInvitePopup />
         <Suspense fallback={null}>
           <GoogleAnalytics />
         </Suspense>
